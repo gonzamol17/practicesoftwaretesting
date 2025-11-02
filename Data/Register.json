@@ -1,0 +1,33 @@
+{
+    "users":[
+        {
+          "firstName":"Pedro",
+          "lastName":"Gimenez",
+          "dateBirth":"1982-05-15",
+          "address":"Los bananos",
+          "postCode":"20220",
+          "city":"Cordoba",
+          "state":"Cordoba",
+          "country":"Austria",
+          "phone":"15565565",
+          "emailAddress":"pedro1@gmail.com",
+          "password":"SuperSecretPassword1!"
+        },
+
+        {
+          "firstName":"Ramon",
+          "lastName":"Alfano",
+          "dateBirth":"02/12/1976",
+          "address":"Los Mandarinos",
+          "postCode":"121154",
+          "city":"Buenos Aires",
+          "state":"Quilmes",
+          "phone":"46788787",
+          "emailAddress":"ramon@gmail.com",
+          "password":"SuperSecretPassword!"
+
+        }
+
+
+    ]
+}

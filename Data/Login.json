@@ -1,0 +1,28 @@
+{
+    "users":[
+        {
+            "email":"pedro1@gmail.com",
+            "password":"SuperSecretPassword1!"
+
+        },
+        {
+            "email":"",
+            "password":""
+
+        },
+        {
+            "email":"pablo",
+            "password":"SuperSecretPassword!"
+
+
+        },
+        {
+            "email":"tomsmith",
+            "password":"Charrua30"
+
+
+        }
+
+
+    ]
+}
