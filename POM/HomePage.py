@@ -35,7 +35,7 @@ class HomePageLocators:
     sortDropdown = (By.CSS_SELECTOR, "select[data-test='sort']")
     combinationPliersCard = (By.CSS_SELECTOR, "img[alt='Combination Pliers']")
     ecoLabelForAllProducts = (By.CSS_SELECTOR, "span[data-test='eco-badge']")
-
+    cardContainer = (By.CSS_SELECTOR, "a.card")
 
 
 class HomePage:
@@ -425,42 +425,87 @@ class HomePage:
         self.driver.find_element(*HomePageLocators.combinationPliersCard).click()
 
 
-    def showMeEachElementIfExistEcoLabel(self, max_pages=5):
+    def showMeEachElementIfExistEcoLabel(self, max_pages=5, retry_count=2):
+        eco_products = []
         page_number = 1
-        all_product_names = []
 
         while page_number <= max_pages:
+            print(f"\n📄 Analizando página {page_number}...")
+
             try:
-                # Esperar a que se carguen los productos en la página
-                self.wait.until(EC.presence_of_all_elements_located(HomePageLocators.baseItemsProducts))
-                product_containers = self.driver.find_elements(*HomePageLocators.baseItemsProducts)
+                # Esperar que se carguen los contenedores de productos
+                self.wait.until(EC.presence_of_all_elements_located(HomePageLocators.cardContainer))
+                cards = self.driver.find_elements(*HomePageLocators.cardContainer)
 
-                print(f"\nPágina {page_number}:")
-                for container in product_containers:
-                    try:
-                        product_name = container.text.strip()
-                        print(f"- {product_name}")
-                        all_product_names.append(product_name)
-                    except:
-                        # Si no se encuentra el nombre del producto, mostrar contenedor completo (fallback)
-                        print(f"- [NO SE PUDO EXTRAER NOMBRE]: {container.text.strip()}")
+                page_eco_count = 0
 
-                # Ir a la siguiente página si corresponde
-                page_number += 1
-                if page_number <= max_pages:
+                for i, card in enumerate(cards):
+                    for attempt in range(retry_count):
+                        try:
+                            # Obtener el nombre del producto
+                            name_el = card.find_element(*HomePageLocators.baseItemsProducts)
+                            product_name = name_el.text.strip()
+                            if not product_name:
+                                product_name = "Nombre no disponible"
+
+                            # Verificar si tiene label ECO
+                            try:
+                                eco_el = card.find_element(*HomePageLocators.ecoLabelForAllProducts)
+                                page_eco_count += 1
+                                eco_products.append({
+                                    "nombre": product_name,
+                                    "pagina": page_number
+                                })
+                                print(f"   🌱 {product_name}")
+                            except NoSuchElementException:
+                                pass  # No tiene ECO
+
+                            break  # Salir del bucle de reintentos si todo salió bien
+
+                        except StaleElementReferenceException:
+                            if attempt < retry_count - 1:
+                                # Reubicar el card
+                                cards = self.driver.find_elements(*HomePageLocators.cardContainer)
+                                card = cards[i]
+                                continue
+                            else:
+                                print(f"⚠️ Producto {i} dio stale tras {retry_count} intentos, continuando...")
+                        except Exception as inner_e:
+                            print(f"⚠️ Error inesperado en producto {i}: {type(inner_e).__name__}")
+                            break
+
+                print(f"🌿 Se encontraron {page_eco_count} productos con label ECO en la página {page_number}")
+
+                # Pasar a la siguiente página
+                if page_number < max_pages:
                     try:
-                        next_page_button = self.wait.until(
-                            EC.element_to_be_clickable((By.CSS_SELECTOR, f"a[aria-label='Page-{page_number}']"))
+                        next_page = self.wait.until(
+                            EC.element_to_be_clickable((By.CSS_SELECTOR, f"a[aria-label='Page-{page_number + 1}']"))
                         )
-                        next_page_button.click()
+                        next_page.click()
+                        page_number += 1
+
+                        # Esperar que los elementos anteriores desaparezcan y carguen los nuevos
+                        self.wait.until(EC.staleness_of(cards[0]))
+                        self.wait.until(EC.presence_of_all_elements_located(HomePageLocators.cardContainer))
+
                     except TimeoutException:
-                        print(f"No se encontró el botón para la página {page_number}")
+                        print(f"⚠️ No se encontró botón para página {page_number + 1}, terminando paginación.")
                         break
-            except TimeoutException:
-                print("No se pudieron cargar los productos de la página.")
+                else:
+                    break
+
+            except Exception as e:
+                print(f"⚠️ Error general en la página {page_number}: {type(e).__name__} - {e}")
                 break
 
-        return all_product_names
+        total_eco = len(eco_products)
+        if total_eco == 0:
+            print("✅ No se encontraron productos con label ECO en ninguna página.")
+        else:
+            print(f"\n✅ Total de productos con label ECO encontrados: {total_eco}")
+
+        return eco_products, total_eco
 
 
 

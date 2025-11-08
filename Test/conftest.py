@@ -8,6 +8,9 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from Utils import utils
+from allure_commons.types import AttachmentType
+import allure
+
 
 
 def pytest_addoption(parser):
@@ -58,6 +61,12 @@ def pytest_runtest_makereport(item):
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")  # <-- ahora funciona
             screenshot_name = f"{report.nodeid.replace('::', '_')}_{timestamp}.png"
             screenshot_path = _capture_screenshot(item.cls.driver, screenshot_name)
+
+            # Adjunta a Allure
+            allure.attach(item.cls.driver.get_screenshot_as_png(),
+                          name="Screenshot",
+                          attachment_type=AttachmentType.PNG)
+
             if screenshot_path:
                 html = f'<div><img src="{screenshot_path}" alt="screenshot" style="width:304px;height:228px;" ' \
                        f'onclick="window.open(this.src)" align="right"/></div>'
