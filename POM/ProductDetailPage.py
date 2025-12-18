@@ -1,7 +1,8 @@
 import time
-
 from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
 class ProductDetailPageLocators:
@@ -17,6 +18,9 @@ class ProductDetailPageLocators:
     listOfRelatedProductsTitles = (By.CSS_SELECTOR, "h5.card-title")
     greenBannerAddMyFavoriteList = (By.CSS_SELECTOR, "div.ng-tns-c969959638-0.toast-message.ng-star-inserted")
     priceProduct = (By.CSS_SELECTOR, "span[data-test='unit-price']")
+    lblOutOfStock = (By.CSS_SELECTOR, "[data-test='out-of-stock']")
+    btnAddToCart = (By.ID, "btn-add-to-cart")
+    co2labels = (By.CSS_SELECTOR, "span.co2-letter.active")
 
 
 
@@ -31,8 +35,16 @@ class ProductDetailPage:
     def addAsFavoriteProduct(self):
         self.driver.find_element(*ProductDetailPageLocators.btn_AddFavorites).click()
 
-    def verifyIfRedBannerForNoAddFavoriteProductIsPresented(self):
-        return self.driver.find_element(*ProductDetailPageLocators.redBannerMsgNoAddFavorites).is_displayed()
+    def verifyIfRedBannerForNoAddFavoriteProductIsPresented(self, timeout=5):
+        try:
+            WebDriverWait(self.driver, timeout).until(
+                EC.visibility_of_element_located(
+                    ProductDetailPageLocators.redBannerMsgNoAddFavorites
+                )
+            )
+            return True
+        except TimeoutException:
+            return False
 
     def showMeTextAndColorFromRedBanner(self):
         return (self.driver.find_element(*ProductDetailPageLocators.redBannerMsgNoAddFavorites).text, self.driver.find_element(*ProductDetailPageLocators.redBannerColorNoAddFavorites).value_of_css_property("background-color"))
@@ -69,3 +81,30 @@ class ProductDetailPage:
 
     def getIndividualProductPrice(self):
         return self.driver.find_element(*ProductDetailPageLocators.priceProduct).text
+
+    def getLabelOutOfStock(self):
+        return self.driver.find_element(*ProductDetailPageLocators.lblOutOfStock).text
+
+    def showStatusOfBtnAddToCart(self):
+        return self.driver.find_element(*ProductDetailPageLocators.btnAddToCart).get_attribute("disabled")
+
+    def selectTheOutOfStockProduct(self, productOutOfStock):
+        if productOutOfStock:
+            product_el = productOutOfStock["elemento"]
+            print(f"➡️ Entrando al producto: {productOutOfStock['nombre']}")
+            print(f"➡️ Que se encuentra en la página: {productOutOfStock['pagina']}")
+            time.sleep(1)
+            product_el.click()  # entrar al detalle del producto
+        else:
+            print("No se encontraron productos fuera de stock.")
+
+    def getCo2FromDetail(self, timeout=5):
+        try:
+            co2 = WebDriverWait(self.driver, timeout).until(
+                EC.visibility_of_element_located(ProductDetailPageLocators.co2labels)
+            ).text.strip()
+            print(f"🌍 CO2 en detalle: {co2}")
+            return co2
+        except TimeoutException:
+            print("⚠️ No se encontró el label CO2 en el detalle")
+            return None

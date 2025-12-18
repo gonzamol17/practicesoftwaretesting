@@ -10,11 +10,12 @@ class TestVerifyCanIAddedAProductToCartAndCheckTheQuantity(BaseClass):
         log.info("Se está por loguear en la página")
         driver = self.driver
         hp = HomePage(driver)
-        productName = "Phillips Screwdriver"
+        productName = "Tool Cabinet"
         hp.selectAParticularElementFromPaginationComponent(productName)
         pdp = ProductDetailPage(driver)
         numberOfIncrease = 3
         pdp.increaseQuantityProduct(numberOfIncrease)
+        time.sleep(1)
         assert pdp.verifyTheGreenBannerIsPresented() == "Product added to shopping cart."
         quantity = int(pdp.verifyTheQuantityFromCartIcon())
         assert numberOfIncrease == quantity

@@ -9,6 +9,7 @@ class TestVerifyNoResultsMessage(BaseClass):
 
       def test_VerifyNoResultsMessage(self):
         log = self.get_Logger()
+        log.info("Se quiere verificar que no haya resultados")
         driver = self.driver
         hp = HomePage(driver)
         productName = "no products"

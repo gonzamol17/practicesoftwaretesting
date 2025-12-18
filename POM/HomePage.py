@@ -36,6 +36,7 @@ class HomePageLocators:
     combinationPliersCard = (By.CSS_SELECTOR, "img[alt='Combination Pliers']")
     ecoLabelForAllProducts = (By.CSS_SELECTOR, "span[data-test='eco-badge']")
     cardContainer = (By.CSS_SELECTOR, "a.card")
+    co2labels = (By.CSS_SELECTOR, "span.co2-letter.active")
 
 
 class HomePage:
@@ -116,36 +117,54 @@ class HomePage:
     def showMeResultSubTitle(self):
         return self.driver.find_element(*HomePageLocators.resultMsgSubtitle).text
 
-    def showMeEachElementFromPaginationComponent(self, productName):
+    def findProductAndGetCo2FromCard(self, product_name, max_pages=6):
         page_number = 1
-        while True:
-            # Obtener los productos de la página actual
-            names = self.driver.find_elements(*HomePageLocators.baseItemsProducts)
-            # Verificar si el producto está en la página actual
-            for name in names:
-                if name.text.strip() == productName:
-                    print(f"Producto encontrado: {name.text} en la página {page_number}")
-                    return True  # Producto encontrado, devolver True
 
-            # Si no encontramos el producto, verificar si es la última página
-            if page_number == 5:  # Suponemos que hay 5 páginas en total
-                print(f"Producto no encontrado en ninguna página después de recorrer la tabla.")
-                break  # Salir si hemos llegado a la última página sin encontrar el producto
+        while page_number <= max_pages:
+            print(f"🔍 Buscando '{product_name}' en página {page_number}")
+            self.wait.until(
+                EC.presence_of_all_elements_located(HomePageLocators.cardContainer)
+            )
 
-            # Si no encontramos el producto y no hemos llegado a la última página, ir a la siguiente página
-            try:
-                # Buscar el botón de la siguiente página
-                page_number = page_number + 1  # Incrementamos el número de página
-                self.driver.find_element(By.CSS_SELECTOR, "a[aria-label='Page-" + str(page_number) + "']").click()
-                time.sleep(2)
-                print(f"Cambiando a la página {page_number}")
+            cards = self.driver.find_elements(*HomePageLocators.cardContainer)
 
-            except IndexError:
-                print("No hay más páginas. Producto no encontrado.")
-                break  # Si no hay más botones de paginación, terminamos
+            for card in cards:
+                try:
+                    name = card.find_element(
+                        *HomePageLocators.baseItemsProducts
+                    ).text.strip()
 
-                # Si hemos recorrido todas las páginas y no hemos encontrado el producto
-        return False
+                    if product_name.lower() in name.lower():
+                        print(f"✅ Producto encontrado: {name}")
+
+                        # 👇 CO2 SOLO del card correcto
+                        co2_label = card.find_element(
+                            *HomePageLocators.co2labels
+                        ).text.strip()
+                        print(f"🌱 CO2 en card: {co2_label}")
+                        card.click()
+                        return co2_label
+
+                except NoSuchElementException:
+                    continue
+                except StaleElementReferenceException:
+                    return self.findProductAndGetCo2FromCard(product_name, max_pages)
+
+            # paginación
+            if page_number < max_pages:
+                next_page = self.wait.until(
+                    EC.element_to_be_clickable(
+                        (By.CSS_SELECTOR, f"a[aria-label='Page-{page_number + 1}']")
+                    )
+                )
+                old_card = cards[0]
+                next_page.click()
+                self.wait.until(EC.staleness_of(old_card))
+                page_number += 1
+            else:
+                break
+        raise AssertionError(f"❌ Producto '{product_name}' no encontrado")
+
 
 
     def showMeEachElementIfExistOutOfStockProduct(self, max_pages=5, retry_count=3):
@@ -382,38 +401,46 @@ class HomePage:
             # Si no encontramos ningún precio, devolvemos un mensaje
         return minPrice, actualName
 
-
-    def selectAParticularElementFromPaginationComponent(self, productName):
+    def selectAParticularElementFromPaginationComponent(self, productName, max_pages=6):
         page_number = 1
-        while True:
-            # Obtener los productos de la página actual
-            names = self.driver.find_elements(*HomePageLocators.baseItemsProducts)
-            # Verificar si el producto está en la página actual
-            for name in names:
-                if name.text.strip() == productName:
-                    print(f"Producto buscado es : {name.text} y está en la página {page_number}")
-                    #return True  # Producto encontrado, devolver True
-                    name.click()
-                    return False
 
-            # Si no encontramos el producto, verificar si es la última página
-            if page_number == 5:  # Suponemos que hay 5 páginas en total
-                print(f"Producto no encontrado en ninguna página después de recorrer la tabla.")
-                break  # Salir si hemos llegado a la última página sin encontrar el producto
+        while page_number <= max_pages:
+            print(f"🔍 Buscando '{productName}' en página {page_number}")
 
-            # Si no encontramos el producto y no hemos llegado a la última página, ir a la siguiente página
-            try:
-                # Buscar el botón de la siguiente página
-                page_number = page_number + 1  # Incrementamos el número de página
-                self.driver.find_element(By.CSS_SELECTOR, "a[aria-label='Page-" + str(page_number) + "']").click()
-                time.sleep(2)
-                print(f"Cambiando a la página {page_number}")
+            self.wait.until(
+                EC.presence_of_all_elements_located(HomePageLocators.cardContainer)
+            )
 
-            except IndexError:
-                print("No hay más páginas. Producto no encontrado.")
-                break  # Si no hay más botones de paginación, terminamos
-                # Si hemos recorrido todas las páginas y no hemos encontrado el producto
-        return False
+            cards = self.driver.find_elements(*HomePageLocators.cardContainer)
+
+            for card in cards:
+                try:
+                    name = card.find_element(*HomePageLocators.baseItemsProducts).text.strip()
+
+                    # 👇 comparación más tolerante
+                    if productName.lower() in name.lower():
+                        print(f"✅ Producto encontrado: {name} en página {page_number}")
+                        card.click()
+                        return
+
+                except StaleElementReferenceException:
+                    return self.selectAParticularElementFromPaginationComponent(productName, max_pages)
+
+            if page_number < max_pages:
+                next_page = self.wait.until(
+                    EC.element_to_be_clickable(
+                        (By.CSS_SELECTOR, f"a[aria-label='Page-{page_number + 1}']")
+                    )
+                )
+
+                old_card = cards[0]
+                next_page.click()
+                self.wait.until(EC.staleness_of(old_card))
+                page_number += 1
+            else:
+                break
+
+        raise AssertionError(f"❌ El producto '{productName}' no fue encontrado en ninguna página")
 
 
     def selectFilterToSortProducts(self, value):
@@ -425,58 +452,112 @@ class HomePage:
         self.driver.find_element(*HomePageLocators.combinationPliersCard).click()
 
 
-    def showMeEachElementIfExistEcoLabel(self, max_pages=5, retry_count=2):
+    def showMeEachElementIfExistEcoLabel(self):
         eco_products = []
+        page_number = 1
+
+        while True:
+            print(f"\n📄 Analizando página {page_number}...")
+
+            self.wait.until(EC.presence_of_all_elements_located(HomePageLocators.cardContainer))
+            cards = self.driver.find_elements(*HomePageLocators.cardContainer)
+
+            first_product_name = cards[0].find_element(
+                *HomePageLocators.baseItemsProducts
+            ).text
+
+            for card in cards:
+                try:
+                    product_name = card.find_element(
+                        *HomePageLocators.baseItemsProducts
+                    ).text.strip()
+
+                    if card.find_elements(*HomePageLocators.ecoLabelForAllProducts):
+                        eco_products.append(product_name)
+                        print(f"🌿 {product_name}")
+
+                except StaleElementReferenceException:
+                    continue
+
+            try:
+                next_page = self.driver.find_element(
+                    By.CSS_SELECTOR, f"a[aria-label='Page-{page_number + 1}']"
+                )
+
+                self.driver.execute_script(
+                    "arguments[0].scrollIntoView({block: 'center'});", next_page
+                )
+                next_page.click()
+
+                self.wait.until(
+                    lambda d: d.find_elements(
+                        *HomePageLocators.baseItemsProducts
+                    )[0].text != first_product_name
+                )
+
+                page_number += 1
+
+            except Exception:
+                print("✅ No hay más páginas. Fin del recorrido.")
+                break
+
+        print(f"\nTotal de productos con label ECO encontrados: {len(eco_products)}")
+        return eco_products
+
+
+
+    def findFirstOutOfStockProduct(self, max_pages=5, retry_count=3):
+        """
+        Recorre las páginas hasta encontrar el primer producto con label 'Out of stock'.
+        Devuelve un diccionario con nombre, texto del footer y página donde se encontró,
+        o None si no se encontró ningún producto fuera de stock.
+        """
+
         page_number = 1
 
         while page_number <= max_pages:
             print(f"\n📄 Analizando página {page_number}...")
 
             try:
-                # Esperar que se carguen los contenedores de productos
-                self.wait.until(EC.presence_of_all_elements_located(HomePageLocators.cardContainer))
-                cards = self.driver.find_elements(*HomePageLocators.cardContainer)
+                # Espera a que se carguen los productos en la página actual
+                self.wait.until(EC.presence_of_all_elements_located(HomePageLocators.baseItemsProducts))
+                self.wait.until(EC.presence_of_all_elements_located(HomePageLocators.footerCardItems))
 
-                page_eco_count = 0
+                total_items = len(self.driver.find_elements(*HomePageLocators.baseItemsProducts))
 
-                for i, card in enumerate(cards):
+                for i in range(total_items):
                     for attempt in range(retry_count):
                         try:
-                            # Obtener el nombre del producto
-                            name_el = card.find_element(*HomePageLocators.baseItemsProducts)
+                            # Reubicar los elementos (por si se refrescan)
+                            name_el = self.driver.find_elements(*HomePageLocators.baseItemsProducts)[i]
+                            footer_el = self.driver.find_elements(*HomePageLocators.footerCardItems)[i]
+
                             product_name = name_el.text.strip()
-                            if not product_name:
-                                product_name = "Nombre no disponible"
+                            footer_text = footer_el.text.strip()
 
-                            # Verificar si tiene label ECO
-                            try:
-                                eco_el = card.find_element(*HomePageLocators.ecoLabelForAllProducts)
-                                page_eco_count += 1
-                                eco_products.append({
+                            if "Out of stock" in footer_text:
+                                #print(f"❌ Primer producto Out of stock encontrado: {product_name} (página {page_number})")
+                                # Devuelve un dict o el propio elemento, según lo que necesites después
+                                return {
                                     "nombre": product_name,
-                                    "pagina": page_number
-                                })
-                                print(f"   🌱 {product_name}")
-                            except NoSuchElementException:
-                                pass  # No tiene ECO
+                                    "estado": footer_text,
+                                    "pagina": page_number,
+                                    "elemento": name_el  # por si luego quieres hacer click en él
+                                }
 
-                            break  # Salir del bucle de reintentos si todo salió bien
+                            break  # si todo fue bien, salir del retry loop
 
                         except StaleElementReferenceException:
                             if attempt < retry_count - 1:
-                                # Reubicar el card
-                                cards = self.driver.find_elements(*HomePageLocators.cardContainer)
-                                card = cards[i]
+                                time.sleep(0.3)
                                 continue
                             else:
-                                print(f"⚠️ Producto {i} dio stale tras {retry_count} intentos, continuando...")
+                                print(f"⚠️ Elemento {i} dio stale tras {retry_count} intentos, continuando...")
                         except Exception as inner_e:
-                            print(f"⚠️ Error inesperado en producto {i}: {type(inner_e).__name__}")
+                            print(f"⚠️ Error inesperado en elemento {i}: {type(inner_e).__name__}")
                             break
 
-                print(f"🌿 Se encontraron {page_eco_count} productos con label ECO en la página {page_number}")
-
-                # Pasar a la siguiente página
+                # Si no se encontró en esta página, pasar a la siguiente
                 if page_number < max_pages:
                     try:
                         next_page = self.wait.until(
@@ -485,12 +566,12 @@ class HomePage:
                         next_page.click()
                         page_number += 1
 
-                        # Esperar que los elementos anteriores desaparezcan y carguen los nuevos
-                        self.wait.until(EC.staleness_of(cards[0]))
-                        self.wait.until(EC.presence_of_all_elements_located(HomePageLocators.cardContainer))
+                        # Esperar que cambie el contenido
+                        self.wait.until(EC.staleness_of(name_el))
+                        self.wait.until(EC.presence_of_all_elements_located(HomePageLocators.baseItemsProducts))
 
                     except TimeoutException:
-                        print(f"⚠️ No se encontró botón para página {page_number + 1}, terminando paginación.")
+                        print(f"⚠️ No se encontró botón para página {page_number + 1}")
                         break
                 else:
                     break
@@ -499,13 +580,6 @@ class HomePage:
                 print(f"⚠️ Error general en la página {page_number}: {type(e).__name__} - {e}")
                 break
 
-        total_eco = len(eco_products)
-        if total_eco == 0:
-            print("✅ No se encontraron productos con label ECO en ninguna página.")
-        else:
-            print(f"\n✅ Total de productos con label ECO encontrados: {total_eco}")
-
-        return eco_products, total_eco
-
-
+        print("✅ No se encontró ningún producto 'Out of stock' en todas las páginas.")
+        return None
 

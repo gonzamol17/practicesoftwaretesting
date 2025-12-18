@@ -11,11 +11,11 @@ class TestVerifyCanNotAddedAFavoriteProductWithOutLogin(BaseClass):
         log.info("Se está por loguear en la página")
         driver = self.driver
         hp = HomePage(driver)
-        productName = "Combination Pliers"
+        productName = "Belt Sander"
         hp.selectAParticularElementFromPaginationComponent(productName)
         pdp = ProductDetailPage(driver)
         pdp.addAsFavoriteProduct()
-        assert pdp.verifyIfRedBannerForNoAddFavoriteProductIsPresented() is True
+        assert pdp.verifyIfRedBannerForNoAddFavoriteProductIsPresented()
         assert pdp.showMeTextAndColorFromRedBanner()[0] == "Unauthorized, can not add product to your favorite list." and pdp.showMeTextAndColorFromRedBanner()[1] == "rgba(189, 54, 47, 1)"
         time.sleep(2)
 

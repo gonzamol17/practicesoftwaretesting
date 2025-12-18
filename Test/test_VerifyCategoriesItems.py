@@ -15,7 +15,7 @@ class TestVerifyCategoriesItems(BaseClass):
         driver = self.driver
         hmp = HeaderMenuPage(driver)
         hmp.selectLinkCategories()
-        categoriesExpected = ['Hand Tools', 'Power Tools', 'Other', 'Special Tools', 'Rentalss']
+        categoriesExpected = ['Hand Tools', 'Power Tools', 'Other', 'Special Tools', 'Rentals']
         categoriesActual = hmp.verifyAllTheCategoriesItems()
         assert categoriesActual == categoriesExpected
         #assert sorted(categoriesActual) == sorted(categoriesExpected1)

@@ -13,9 +13,10 @@ class CheckoutPageLocators:
     btnCheckout = (By.CSS_SELECTOR, "div[class='ng-star-inserted'] button[type='button']")
     firstCircleBar = (By.CSS_SELECTOR, "li[class='ng-star-inserted done navigable'] div:nth-child(2)")
     msgSuccessOnSecondStep = (By.CSS_SELECTOR, "p[class='ng-star-inserted']")
-    btnTwoCheckout = (By.CSS_SELECTOR, "button[data-test='proceed-2']")
+    btnTwoCheckout = (By.CSS_SELECTOR, "button[data-test='proceed-1']")
     secondCircleBar = (By.CSS_SELECTOR, "li:nth-child(2)>a>div.step-indicator")
-    btnThreeCheckout = (By.CSS_SELECTOR, "button[data-test='proceed-3']")
+    btnThreeCheckout = (By.CSS_SELECTOR, "button[data-test='proceed-2']")
+    btnForthCheckout = (By.CSS_SELECTOR, "button[data-test='proceed-3']")
     thirdCircleBar = (By.CSS_SELECTOR, "li:nth-child(3)>a>div.step-indicator")
     fourthCircleBar = (By.CSS_SELECTOR, "li:nth-child(4)>a>div.step-indicator")
     paymentMethodDropdown = (By.ID, "payment-method")
@@ -59,6 +60,9 @@ class CheckoutPage:
 
     def selectTheThirdCheckoutBtn(self):
         self.driver.find_element(*CheckoutPageLocators.btnThreeCheckout).click()
+
+    def selectTheForthCheckoutBtn(self):
+        self.driver.find_element(*CheckoutPageLocators.btnForthCheckout).click()
 
     def getColorFromThirdCircleBar(self):
         return self.driver.find_element(*CheckoutPageLocators.thirdCircleBar).value_of_css_property("background-color")

@@ -12,7 +12,8 @@ class TestFoundProductsWithEcoLabels(BaseClass):
         log.info("Se está por loguear en la página")
         driver = self.driver
         hp = HomePage(driver)
-        eco_products, total_eco = hp.showMeEachElementIfExistEcoLabel()
-        assert total_eco > 0, "No se encontraron productos con label ECO"
-        print(f"\n🌿 Total de productos ECO encontrados en todas las páginas: {total_eco}")
-        time.sleep(3)
+        eco_products = hp.showMeEachElementIfExistEcoLabel()
+        assert len(eco_products) > 0, "❌ No se encontraron productos con label ECO."
+        print("\nProductos ECO encontrados:")
+        for p in eco_products:
+          print(f"🌿 {p}")
