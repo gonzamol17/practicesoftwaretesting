@@ -28,6 +28,10 @@ class CheckoutPageLocators:
     greenBannerPaymentConfirmed = (By.CSS_SELECTOR, "div[data-test='payment-success-message']")
     lastBtnConfirm = (By.CSS_SELECTOR, "button[data-test='finish']")
     msgConfirmationPayment = (By.ID, "order-confirmation")
+    productQtyLbl = (By.CSS_SELECTOR, "input[data-test='product-quantity']")
+    productPrice = (By.CSS_SELECTOR, "span[data-test='product-price']")
+    totalPrice = (By.CSS_SELECTOR, "td[data-test='cart-total']")
+
 
 
 class CheckoutPage:
@@ -95,9 +99,21 @@ class CheckoutPage:
     def getOrderInvoiceConfirmed(self):
         return self.driver.find_element(*CheckoutPageLocators.msgConfirmationPayment).text
 
+    def showMeQty(self):
+        return int(self.driver.find_element(*CheckoutPageLocators.productQtyLbl).get_attribute("value"))
+
+
     def getInvoiceNumber(self, invoiceNum):
         match = re.search(r'INV-\d+', invoiceNum)
         if match:
             return match.group()
         else:
             return None
+
+    def showMeIndividualPrice(self):
+        price = self.driver.find_element(*CheckoutPageLocators.productPrice).text
+        return float(price.replace("$", "").strip())
+
+    def showMeTotalPrice(self):
+        totprice = self.driver.find_element(*CheckoutPageLocators.totalPrice).text
+        return float(totprice.replace("$", "").strip())

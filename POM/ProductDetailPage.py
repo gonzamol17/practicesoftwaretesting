@@ -1,4 +1,5 @@
 import time
+
 from selenium.common import TimeoutException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
@@ -12,7 +13,7 @@ class ProductDetailPageLocators:
     redBannerColorNoAddFavorites = (By.CSS_SELECTOR, "div.ngx-toastr.toast-error")
     btn_QuantityIncrease = (By.ID, "btn-increase-quantity")
     btn_AddToCart = (By.ID, "btn-add-to-cart")
-    greenBannerAddToCart = (By.ID, "toast-container")
+    greenBanner = (By.ID, "toast-container")
     iconCartQuantity = (By.ID, "lblCartCount")
     relatedProductsTitle = (By.XPATH, "//h2[normalize-space()='Related products']")
     listOfRelatedProductsTitles = (By.CSS_SELECTOR, "h5.card-title")
@@ -21,6 +22,9 @@ class ProductDetailPageLocators:
     lblOutOfStock = (By.CSS_SELECTOR, "[data-test='out-of-stock']")
     btnAddToCart = (By.ID, "btn-add-to-cart")
     co2labels = (By.CSS_SELECTOR, "span.co2-letter.active")
+    qtyInput = (By.ID, "quantity-input")
+    redToastWarning = (By.CSS_SELECTOR, "div[role='alert']")
+
 
 
 
@@ -63,7 +67,7 @@ class ProductDetailPage:
     def selectTheAddToCartBtn(self):
         self.driver.find_element(*ProductDetailPageLocators.btn_AddToCart).click()
         time.sleep(1)
-        self.driver.find_element(*ProductDetailPageLocators.greenBannerAddToCart).click()
+        self.driver.find_element(*ProductDetailPageLocators.greenBanner).click()
 
     def verifyIfRelatedProductTitleIsPresented(self):
         return self.driver.find_element(*ProductDetailPageLocators.relatedProductsTitle).text
@@ -108,3 +112,24 @@ class ProductDetailPage:
         except TimeoutException:
             print("⚠️ No se encontró el label CO2 en el detalle")
             return None
+
+
+    def insertQtyNumber(self, qtyNumber):
+        self.driver.find_element(*ProductDetailPageLocators.qtyInput).clear()
+        self.driver.find_element(*ProductDetailPageLocators.qtyInput).send_keys(qtyNumber)
+
+    def addQtyNumberToTheCart(self):
+        self.driver.find_element(*ProductDetailPageLocators.btn_AddToCart).click()
+
+    def getToastMessage(self, timeout=3):
+        try:
+            toast = WebDriverWait(self.driver, timeout).until(
+                EC.visibility_of_element_located(
+                    ProductDetailPageLocators.redToastWarning
+                )
+            )
+            return toast.text.strip()
+        except TimeoutException:
+            raise TimeoutException(
+            "❌ El toast message no apareció dentro del tiempo esperado"
+            )

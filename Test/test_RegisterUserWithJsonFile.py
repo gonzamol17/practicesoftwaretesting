@@ -32,7 +32,7 @@ class TestRegisterUserWithJsonFile(BaseClass):
                                 list1[n].get("postCode"), list1[n].get("city"), list1[n].get("state"), list1[n].get("country"),
                                 list1[n].get("phone"), list1[n].get("emailAddress"), list1[n].get("password"))
 
-        assert lp.showLoginTitle() == "Login"
+        assert lp.showLoginTitle() == "Iniciar sesión"
         time.sleep(3)
 
 

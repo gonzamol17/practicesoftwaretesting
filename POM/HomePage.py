@@ -403,6 +403,7 @@ class HomePage:
 
     def selectAParticularElementFromPaginationComponent(self, productName, max_pages=6):
         page_number = 1
+        productName = productName.strip().lower()
 
         while page_number <= max_pages:
             print(f"🔍 Buscando '{productName}' en página {page_number}")
@@ -415,10 +416,12 @@ class HomePage:
 
             for card in cards:
                 try:
-                    name = card.find_element(*HomePageLocators.baseItemsProducts).text.strip()
+                    name = card.find_element(
+                        *HomePageLocators.baseItemsProducts
+                    ).text.strip().lower()
 
-                    # 👇 comparación más tolerante
-                    if productName.lower() in name.lower():
+                    # ✅ Match exacto
+                    if name == productName:
                         print(f"✅ Producto encontrado: {name} en página {page_number}")
                         card.click()
                         return
@@ -429,8 +432,7 @@ class HomePage:
             if page_number < max_pages:
                 next_page = self.wait.until(
                     EC.element_to_be_clickable(
-                        (By.CSS_SELECTOR, f"a[aria-label='Page-{page_number + 1}']")
-                    )
+                        (By.CSS_SELECTOR, f"a[aria-label='Page-{page_number + 1}']"))
                 )
 
                 old_card = cards[0]

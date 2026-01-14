@@ -1,16 +1,16 @@
 import time
 
-from selenium.common import NoSuchElementException, ElementClickInterceptedException
+from selenium.common import NoSuchElementException, ElementClickInterceptedException, TimeoutException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 
 
 class HeaderMenuPageLocators:
     linkHome = (By.XPATH, "//a[contains(text(),'Home')]")
     linkCategories = (By.XPATH, "//a[contains(text(),'Categories')]")
     linkContact = (By.XPATH, "//a[contains(text(),'Contact')]")
-    linkSignIn = (By.XPATH, "//a[contains(text(),'Sign in')]")
+    linkSignIn = (By.XPATH, "//a[contains(text(),'Iniciar sesión')]")
     linkLanguages = (By.ID, "language")
     dropdownLanguages = (By.CSS_SELECTOR, "#dropdown-animated>li>a")
     itemsFromHeaderMenu = (By.CSS_SELECTOR, "[class='nav-item']>a")
@@ -28,6 +28,7 @@ class HeaderMenuPage:
 
     def __init__(self, driver):
         self.driver = driver
+        self.wait = WebDriverWait(driver, 10)
 
     def selectLinkHome(self):
         self.driver.find_element(*HeaderMenuPageLocators.linkHome).click()
@@ -72,7 +73,8 @@ class HeaderMenuPage:
                 item.click()
 
     def selectShoppingCartItem(self):
-        self.driver.find_element(*HeaderMenuPageLocators.shoppingCartItem).click()
+        cart_item = self.wait.until(EC.element_to_be_clickable(HeaderMenuPageLocators.shoppingCartItem))
+        cart_item.click()
 
 
     def verifyIfShoppingCartIsPresent(self):
@@ -105,3 +107,20 @@ class HeaderMenuPage:
 
     def selectContactOption(self):
         self.driver.find_element(*HeaderMenuPageLocators.linkContact).click()
+
+    def cleanShoppingCartItem(self):
+        #try:
+            # Intentamos encontrar el elemento
+         #   self.driver.find_element(*HeaderMenuPageLocators.shoppingCartItem).click()
+
+        #except NoSuchElementException:
+            #return False  # Si el elemento no fue encontrado, devolvemos False
+        try:
+            wait = WebDriverWait(self.driver, 2)  # espera corta
+            cart_item = wait.until(
+                EC.presence_of_element_located(HeaderMenuPageLocators.shoppingCartItem)
+            )
+            cart_item.click()
+            return True
+        except TimeoutException:
+            return False

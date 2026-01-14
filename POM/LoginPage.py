@@ -4,8 +4,8 @@ from selenium.webdriver.common.by import By
 class LoginPageLocators:
     txtEmail = (By.ID, "email")
     txtPassword = (By.ID, "password")
-    linkRegisterAccount = (By.XPATH, "//a[contains(text(),'Register your account')]")
-    titleLogin = (By.XPATH, "//h3[contains(text(),'Login')]")
+    linkRegisterAccount = (By.XPATH, "//a[contains(text(),'Registra tu cuenta')]")
+    titleLogin = (By.XPATH, "//h3[contains(text(),'Iniciar sesión')]")
     btnLogin = (By.CSS_SELECTOR, "input.btnSubmit")
     validationErrorEmail = (By.ID, "email-error")
     validationErrorPass = (By.ID, "password-error")
