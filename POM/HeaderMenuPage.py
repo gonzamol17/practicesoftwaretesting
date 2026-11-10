@@ -8,7 +8,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 class HeaderMenuPageLocators:
     linkHome = (By.XPATH, "//a[contains(text(),'Home')]")
-    linkCategories = (By.XPATH, "//a[contains(text(),'Categorías')]")
+    linkCategories = (By.XPATH, "//button[contains(text(),'Categorías')]")
     linkContact = (By.XPATH, "//a[contains(text(),'Contact')]")
     linkSignIn = (By.XPATH, "//a[contains(text(),'Iniciar sesión')]")
     linkLanguages = (By.ID, "language")

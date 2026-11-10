@@ -1,12 +1,12 @@
 import json
 import time
-
+import pytest
 from POM.HeaderMenuPage import HeaderMenuPage
 from POM.LoginPage import LoginPage
 from POM.MyAccountPage import MyAccountPage
 from Utils.BaseClass import BaseClass
 
-
+@pytest.mark.report
 class TestVerifyCategoriesItems(BaseClass):
 
       def test_VerifyCategoriesItems(self):
